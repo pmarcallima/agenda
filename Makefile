@@ -33,7 +33,7 @@ endif
 # Targets
 
 # Build executable
-$(NAME): lint dir $(OBJS)
+$(NAME): format lint dir $(OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $(BIN_DIR)/$@ $(patsubst %, build/%, $(OBJS))
 
 # Build object files and third-party libraries

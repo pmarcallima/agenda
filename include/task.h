@@ -1,5 +1,5 @@
-#ifndef TASK_H 
-#define TASK_H 
+#ifndef TASK_H
+#define TASK_H
 
 #include <stdbool.h>
 #include <time.h>
@@ -13,4 +13,6 @@ typedef struct Task {
   bool status;
 
 } Task;
-#endif // TASK_H 
+
+struct Task *create_task(void);
+#endif // TASK_H

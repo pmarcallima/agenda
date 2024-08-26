@@ -6,13 +6,9 @@
 
 struct List {
   struct Node *start;
-
 };
-struct List* create_list(void);
+struct List *create_list(void);
 
-bool insert_list(struct Task *t, struct List *l);
-
-
+bool insert_list(struct Task t, struct List *l);
 
 #endif
-

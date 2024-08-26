@@ -4,14 +4,15 @@
 #define DAY_QNT_MAX 365
 #include "list.h"
 
-
-struct Hash
-{
+struct Hash {
   int key;
-  struct List l[DAY_QNT_MAX];
-
+  struct List *l[DAY_QNT_MAX];
 };
 
-struct Hash * create_hash(void);
+struct Hash *create_hash(void);
 
-#endif 
+bool insert_hash(struct Hash *h, struct Task *t);
+
+void print_hash(struct Hash *h);
+
+#endif
