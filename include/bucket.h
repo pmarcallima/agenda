@@ -6,7 +6,7 @@
 #define BUCKET_BYTE_SIZE 13
 #define FLEX_HASH_FILE "hash_address_id.txt"
 #define BUCKET_FILE "bucket.txt"
-#define ELEMENT_SIZE 20
+#define ELEMENT_SIZE 10
 
 #include <stdint.h>
 

@@ -1,6 +1,7 @@
 #include "byte.h"
 #include <bucket.h>
 #include <math.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -24,7 +25,9 @@ struct node_bucket *create_node_bucket(void) {
 }
 struct bucket *create_bucket(void) {
   struct bucket *tmp = (struct bucket *)malloc(sizeof(struct bucket));
-  tmp->list_start = NULL;
+  tmp->list_start = (struct node_bucket **)malloc(sizeof(struct node_bucket *));
+  *tmp->list_start = create_node_bucket();
+
   tmp->local_depth = -1;
   tmp->total_elements = -1;
   return tmp;
@@ -135,8 +138,18 @@ int insert_bucket_file(struct address_id new) {
   struct bucket *b = create_bucket();
   fread(&b->local_depth, 1, 1, bucket_file);
   fread(&b->total_elements, 2, 1, bucket_file);
+  struct node_bucket *free_ptr = *b->list_start;
+  for (int i = 0; i < b->total_elements; i++) {
+    free_ptr->next = create_node_bucket();
+    free_ptr = free_ptr->next;
+    fread(&free_ptr->element.address, 8, 1, bucket_file);
+    fread(&free_ptr->element.id, 2, 1, bucket_file);
+  }
+
   if (b->total_elements < 24) {
     b->total_elements++;
+    fseek(bucket_file, -2, SEEK_CUR);
+    fwrite(&b->total_elements, 2, 1, bucket_file);
     fseek(bucket_file, ELEMENT_SIZE * b->total_elements, SEEK_CUR);
     fwrite(&new.address, 8, 1, bucket_file);
     fwrite(&new.id, 2, 1, bucket_file);
@@ -145,14 +158,46 @@ int insert_bucket_file(struct address_id new) {
     fclose(bucket_file);
     return 1;
   } else {
-    if (b->local_depth >= h->global_depth)
+    if (b->local_depth >= h->global_depth) {
       double_hash(h);
-    update_hash_file(*h);
+    }
+    if (b->local_depth < h->global_depth) {
 
-    // TODO: implementar duplicação de buckets aqui
+      fseek(bucket_file, address, SEEK_SET);
+      struct bucket *new_b = create_bucket();
+      new_b->local_depth = b->local_depth++;
+
+      fwrite(&new_b->local_depth, 1, 1, bucket_file);
+      fwrite(0, 1, 1, bucket_file);
+
+      struct bucket *old_b = create_bucket();
+      long new_address = address * pow(2, b->local_depth);
+      fseek(bucket_file, new_address, SEEK_SET);
+      old_b->local_depth = h->global_depth;
+      fwrite(&old_b->local_depth, 1, 1, bucket_file);
+      fwrite(0, 1, 1, bucket_file);
+      fclose(bucket_file);
+
+      int start = hash_bucket_local(new.id, b->local_depth);
+      int offset = (int)pow(2, b->local_depth);
+      int max = (int)pow(2, h->global_depth);
+      bool flag = false;
+      for (int i = start; i < max; i += offset) {
+        if (flag)
+          h->bucket_address[i] = i * 256;
+        flag = true;
+      }
+    }
+    update_hash_file(*h);
     free(h);
+
+    struct node_bucket *tmp = *b->list_start;
+    int total_elements = b->total_elements;
+    for (int i = 0; i < total_elements; i++) {
+      tmp = tmp->next;
+      insert_bucket_file(tmp->element);
+    }
     free(b);
-    fclose(bucket_file);
   }
   return 0;
 }
