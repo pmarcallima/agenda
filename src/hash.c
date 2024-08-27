@@ -31,7 +31,6 @@ bool insert_hash(struct Hash *h, struct Task *t) {
   printf("dif = %d", hash(dif));
   if (dif > 0) {
     insert_list(*t, h->l[hash(dif)]);
-    // printf("%s", h->l[hash(dif)].start->next->t->titulo);
     print_hash(h);
     free(h);
     return true;
