@@ -1,5 +1,6 @@
 
 #include <agendaArquivo.h>
+#include <bucket.h>
 #include <byte.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,7 +17,7 @@ int total_bytes(Task *t) {
 bool create_task_file(Task *t) {
 
   FILE *file = fopen("arquivo.txt", "rb+");
-  short last_id;
+  short last_id = t->id;
   unsigned char *id = (unsigned char *)malloc(sizeof(unsigned char) * 2);
   fread(id, 2, 1, file);
   last_id = byte_to_int(id);
@@ -30,6 +31,7 @@ bool create_task_file(Task *t) {
   char lapide = '*';
   short byte_array_size = total_bytes(t);
   // lapide
+  long address = ftell(file);
   fwrite(&lapide, 1, 1, file);
   fwrite(id_bytes, 2, 1, file);
   fwrite(short_to_byte(byte_array_size), 2, 1, file);
@@ -41,27 +43,26 @@ bool create_task_file(Task *t) {
   fwrite(short_to_byte(t->data_entrega.tm_mon), 1, 1, file);
   fwrite(short_to_byte(t->data_entrega.tm_year), 2, 1, file);
   fwrite(&t->status, 1, 1, file);
+  struct address_id ad_id;
+  ad_id.id = last_id;
+  ad_id.address = address;
+  fclose(file);
+  insert_bucket_file(ad_id);
 
   free(id_bytes);
-  fclose(file);
 
   return false;
 }
-Task delete_task_file(int id) {
+Task delete_task_file(int id, int64_t address) {
   Task t;
   t.id = 0;
   FILE *file = fopen("arquivo.txt", "rb+");
-  fseek(file, 0, SEEK_END);
-  int size = ftell(file);
-  fseek(file, 0, SEEK_SET);
+  fseek(file, address, SEEK_SET);
   char lapide;
   unsigned char *tmp = malloc(sizeof(unsigned char) * 2);
-  bool loop = true;
   short string_size;
   short last_id;
   long pos;
-  fseek(file, 2, SEEK_SET);
-  while (loop) {
 
     pos = ftell(file);
     lapide = fgetc(file);
@@ -70,7 +71,7 @@ Task delete_task_file(int id) {
     fread(tmp, 2, 1, file);
     string_size = byte_to_short(tmp);
     if (lapide == ' ') {
-      fseek(file, string_size - 1, SEEK_CUR);
+    return t;
     } else {
       if (last_id == id) {
         fread(tmp, 2, 1, file);
@@ -104,14 +105,7 @@ Task delete_task_file(int id) {
         fclose(file);
         return t;
 
-      }
 
-      else {
-
-        fseek(file, string_size - 1, SEEK_CUR);
-        if (ftell(file) >= size)
-          loop = false;
-      }
     }
   }
   printf("Task not found\n");

@@ -1,7 +1,7 @@
 #ifndef BUCKET_H
 #define BUCKET_H
 #define QNT_MAX_ELE 256
-#define MAX_DEPTH 8 
+#define MAX_DEPTH 8
 #define INITIAL_BUCKET_QNT 8
 #define BUCKET_BYTE_SIZE 13
 #define FLEX_HASH_FILE "hash_address_id.txt"
@@ -24,7 +24,7 @@ struct bucket {
 
   int8_t local_depth;
   int16_t total_elements;
-  struct node_bucket **list_start;
+  struct node_bucket *list_start;
 };
 struct hash_address_id {
   int8_t global_depth;
@@ -32,5 +32,13 @@ struct hash_address_id {
   int8_t total_buckets;
   int64_t bucket_address[QNT_MAX_ELE];
 };
+
+int insert_bucket_file(struct address_id new);
+
+struct bucket *read_all_bucket_file(struct hash_address_id *h);
+
+struct hash_address_id *create_hash_address_id(void);
+
+void read_hash_file(struct hash_address_id *h);
 
 #endif // !BUCKET_H
